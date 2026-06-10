@@ -1,0 +1,23 @@
+[
+  [
+    1,
+    "whoami",
+    "completed",
+    "Admin\n",
+    "2026-06-09T19:56:40.436746"
+  ],
+  [
+    2,
+    "echo test123",
+    "completed",
+    "test123\r\n",
+    "2026-06-09T19:57:09.231805"
+  ],
+  [
+    3,
+    "dir",
+    "completed",
+    " ��� � ���ன�⢥ C ����� ���� system\r\n ��਩�� ����� ⮬�: 988D-BA47\r\n\r\n ����ন��� ����� C:\\Users\\Admin\\AppData\\Local\\HackerAI\r\n\r\n09.06.2026  19:27    <DIR>          .\r\n09.06.2026  17:12    <DIR>          ..\r\n09.06.2026  19:29             1�007 c2_state.json\r\n02.06.2026  01:59               173 c2_test.log\r\n05.06.2026  18:36             3�416 C?agent-workspacetest_agent.py\r\n05.06.2026  17:22                 0 guid\r\n28.05.2026  01:35         7�307�776 hackerai-desktop.exe\r\n08.06.2026  00:50                47 nul\r\n26.05.2026  15:59                68 tunnel.log\r\n27.05.2026  20:17                59 tunnel_persist.log\r\n27.05.2026  11:45                59 tunnel_run.log\r\n28.05.2026  21:30           353�194 uninstall.exe\r\n09.06.2026  19:26    <DIR>          uploads\r\n09.06.2026  18:59               205 ��������������������HVn732GO.tmp\r\n09.06.2026  19:37               164 ��������������������Sz5cSIfw.tmp\r\n              12 䠩���      7�666�168 ����\r\n               3 �����  137�135�824�896 ���� ᢮�����\r\n",
+    "2026-06-09T19:57:22.347595"
+  ]
+]
